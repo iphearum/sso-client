@@ -20,7 +20,9 @@
     "dist",
     "README.md"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@smis/sso-client": "git+https://github.com/iphearum/sso-client.git"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0"
