@@ -32,7 +32,7 @@ const fetchContextAuthorizations = async (config, session) => {
     if (!response.ok) {
         throw new Error(`Failed to load contextual authorizations (${response.status})`);
     }
-    return response.json();
+    return (await response.json());
 };
 exports.fetchContextAuthorizations = fetchContextAuthorizations;
 const logoutSession = async (config, session) => {

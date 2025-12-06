@@ -1,4 +1,4 @@
-import { SmisSession, StorageAdapter } from './types';
+import { Session, StorageAdapter } from './types';
 export declare class MemoryStorage implements StorageAdapter {
     private store;
     getItem(key: string): string | null;
@@ -6,5 +6,5 @@ export declare class MemoryStorage implements StorageAdapter {
     removeItem(key: string): void;
 }
 export declare const getDefaultStorage: () => StorageAdapter;
-export declare const storeSession: (storage: StorageAdapter, storageKey: string, session: SmisSession | null) => void;
-export declare const readSession: (storage: StorageAdapter, storageKey: string) => SmisSession | null;
+export declare const storeSession: (storage: StorageAdapter, storageKey: string, session: Session | null) => void;
+export declare const readSession: (storage: StorageAdapter, storageKey: string) => Session | null;

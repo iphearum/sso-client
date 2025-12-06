@@ -1,16 +1,16 @@
-import { SmisAuthorization, SmisSession, SmisSsoConfig } from './types';
-export declare class SmisSsoClient {
+import { Authorization, Session, Config, ContextAuthorization } from "./types";
+export declare class Client {
     private readonly config;
     private readonly storage;
     private readonly storageKey;
     private readonly timeoutMs;
     private readonly pollIntervalMs;
     private readonly authOrigin;
-    constructor(config: SmisSsoConfig);
-    getCachedSession(): SmisSession | null;
-    ensureSession(): Promise<SmisSession>;
-    loadAuthorizations(session?: SmisSession): Promise<SmisAuthorization>;
-    loadContextAuthorizations(session?: SmisSession): Promise<unknown>;
+    constructor(config: Config);
+    getCachedSession(): Session | null;
+    ensureSession(): Promise<Session>;
+    loadAuthorizations(session?: Session): Promise<Authorization>;
+    loadContextAuthorizations(session?: Session): Promise<ContextAuthorization>;
     /**
      * Clears the locally cached session only (no network calls).
      */
@@ -20,15 +20,15 @@ export declare class SmisSsoClient {
      */
     signIn(options?: {
         force?: boolean;
-    }): Promise<SmisSession>;
+    }): Promise<Session>;
     /**
      * Signs out: calls the auth portal logout (best-effort) and clears all local state.
      */
-    signOut(session?: SmisSession): Promise<void>;
+    signOut(session?: Session): Promise<void>;
     /**
      * Switches user by clearing the current session and forcing a new sign-in.
      */
-    switchUser(): Promise<SmisSession>;
+    switchUser(): Promise<Session>;
     private launchAuthProbe;
 }
-export declare const createAuthProbeResponse: (session: SmisSession) => void;
+export declare const createAuthProbeResponse: (session: Session) => void;

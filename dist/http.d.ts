@@ -1,5 +1,5 @@
-import { SmisAuthorization, SmisSession, SmisSsoConfig } from './types';
-export declare const buildAuthUrl: (config: SmisSsoConfig) => URL;
-export declare const fetchAuthorizations: (config: SmisSsoConfig, session: SmisSession) => Promise<SmisAuthorization>;
-export declare const fetchContextAuthorizations: (config: SmisSsoConfig, session: SmisSession) => Promise<unknown>;
-export declare const logoutSession: (config: SmisSsoConfig, session?: SmisSession) => Promise<void>;
+import { Authorization, ContextAuthorization, Session, Config } from './types';
+export declare const buildAuthUrl: (config: Config) => URL;
+export declare const fetchAuthorizations: (config: Config, session: Session) => Promise<Authorization>;
+export declare const fetchContextAuthorizations: (config: Config, session: Session) => Promise<ContextAuthorization>;
+export declare const logoutSession: (config: Config, session?: Session) => Promise<void>;

@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createAuthProbeResponse = exports.SmisSsoClient = void 0;
+exports.createAuthProbeResponse = exports.Client = void 0;
 const http_1 = require("./http");
 const storage_1 = require("./storage");
-class SmisSsoClient {
+class Client {
     constructor(config) {
         this.config = config;
         this.storage = (0, storage_1.getDefaultStorage)();
@@ -26,8 +26,8 @@ class SmisSsoClient {
         const cached = this.getCachedSession();
         if (cached)
             return cached;
-        if (typeof window === 'undefined') {
-            throw new Error('ensureSession requires a browser runtime to open the auth probe');
+        if (typeof window === "undefined") {
+            throw new Error("ensureSession requires a browser runtime to open the auth probe");
         }
         const session = await this.launchAuthProbe();
         (0, storage_1.storeSession)(this.storage, this.storageKey, session);
@@ -77,46 +77,46 @@ class SmisSsoClient {
     launchAuthProbe() {
         return new Promise((resolve, reject) => {
             const authUrl = (0, http_1.buildAuthUrl)(this.config);
-            authUrl.searchParams.set('appKey', this.config.appKey);
-            const popup = window.open(authUrl.toString(), '_blank', 'width=580,height=640');
+            authUrl.searchParams.set("appKey", this.config.appKey);
+            const popup = window.open(authUrl.toString(), "_blank", "width=580,height=640");
             if (!popup) {
-                reject(new Error('Unable to open auth probe window'));
+                reject(new Error("Unable to open auth probe window"));
                 return;
             }
             const timeoutId = window.setTimeout(() => {
-                window.removeEventListener('message', messageHandler);
+                window.removeEventListener("message", messageHandler);
                 popup.close();
-                reject(new Error('Auth probe timed out'));
+                reject(new Error("Auth probe timed out"));
             }, this.timeoutMs);
             const messageHandler = (event) => {
                 if (event.origin !== this.authOrigin)
                     return;
-                if (!event.data || event.data.type !== 'smis:sso:session')
+                if (!event.data || event.data.type !== "smis:sso:session")
                     return;
                 window.clearTimeout(timeoutId);
-                window.removeEventListener('message', messageHandler);
+                window.removeEventListener("message", messageHandler);
                 popup.close();
                 resolve(event.data.payload);
             };
-            window.addEventListener('message', messageHandler);
+            window.addEventListener("message", messageHandler);
             const intervalId = window.setInterval(() => {
                 if (popup.closed) {
                     window.clearInterval(intervalId);
                     window.clearTimeout(timeoutId);
-                    window.removeEventListener('message', messageHandler);
-                    reject(new Error('Auth probe was closed before completing sign-in'));
+                    window.removeEventListener("message", messageHandler);
+                    reject(new Error("Auth probe was closed before completing sign-in"));
                 }
             }, this.pollIntervalMs);
         });
     }
 }
-exports.SmisSsoClient = SmisSsoClient;
+exports.Client = Client;
 const createAuthProbeResponse = (session) => {
-    if (typeof window === 'undefined')
+    if (typeof window === "undefined")
         return;
     const message = {
-        type: 'smis:sso:session',
-        payload: session
+        type: "smis:sso:session",
+        payload: session,
     };
     window.opener?.postMessage(message, window.location.origin);
 };

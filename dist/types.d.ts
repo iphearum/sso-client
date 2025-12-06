@@ -1,4 +1,4 @@
-export interface SmisSsoConfig {
+export interface Config {
     /** Application key issued by SMIS (e.g., pp-#########, tk-gic-#########). */
     appKey: string;
     /** Base URL of the auth portal (e.g., https://auth.smis.itc.edu.kh). */
@@ -14,16 +14,16 @@ export interface SmisSsoConfig {
     /** Optional override for fetch (defaults to global fetch). */
     fetch?: typeof fetch;
 }
-export interface SmisSession {
+export interface Session {
     accessToken: string;
     refreshToken?: string;
     expiresAt: string;
 }
-export interface SmisAuthorization {
+export interface Authorization {
     roles: string[];
     permissions: string[];
 }
-export interface SmisContextAuthorization {
+export interface ContextAuthorization {
     employeeId: number | null;
     branches: any[];
 }
@@ -34,5 +34,5 @@ export interface StorageAdapter {
 }
 export interface AuthProbeMessage {
     type: 'smis:sso:session';
-    payload: SmisSession;
+    payload: Session;
 }
