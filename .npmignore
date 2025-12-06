@@ -1,0 +1,9 @@
+src/
+examples/
+tsconfig.json
+*.log
+.DS_Store
+node_modules/
+bun.lock
+*.test.ts
+*.spec.ts
