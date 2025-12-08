@@ -18,4 +18,5 @@ __exportStar(require("./client"), exports);
 __exportStar(require("./http"), exports);
 __exportStar(require("./storage"), exports);
 __exportStar(require("./types"), exports);
+__exportStar(require("./jwt"), exports);
 //# sourceMappingURL=index.js.map

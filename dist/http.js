@@ -1,18 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logoutSession = exports.fetchContextAuthorizations = exports.fetchAuthorizations = exports.buildAuthUrl = void 0;
+const requireBaseUrl = (config) => {
+    if (!config.authBaseUrl) {
+        throw new Error('authBaseUrl is required on config');
+    }
+    return config.authBaseUrl;
+};
+const requireAppKey = (config) => {
+    if (!config.appKey) {
+        throw new Error('appKey is required on config');
+    }
+    return config.appKey;
+};
 const buildAuthUrl = (config) => {
     const probePath = config.probePath ?? '/sso/probe';
-    return new URL(probePath, config.authBaseUrl);
+    return new URL(probePath, requireBaseUrl(config));
 };
 exports.buildAuthUrl = buildAuthUrl;
 const fetchAuthorizations = async (config, session) => {
-    const authUrl = new URL('/api/sso/authorizations', config.authBaseUrl);
+    const authUrl = new URL('/api/sso/authorizations', requireBaseUrl(config));
     const fetchImpl = config.fetch ?? fetch;
     const response = await fetchImpl(authUrl.toString(), {
         headers: {
             Authorization: `Bearer ${session.accessToken}`,
-            'X-SMIS-APP-KEY': config.appKey
+            'X-SMIS-APP-KEY': requireAppKey(config)
         }
     });
     if (!response.ok) {
@@ -22,7 +34,7 @@ const fetchAuthorizations = async (config, session) => {
 };
 exports.fetchAuthorizations = fetchAuthorizations;
 const fetchContextAuthorizations = async (config, session) => {
-    const url = new URL('/api/sso/authorizations/context', config.authBaseUrl);
+    const url = new URL('/api/sso/authorizations/context', requireBaseUrl(config));
     const fetchImpl = config.fetch ?? fetch;
     const response = await fetchImpl(url.toString(), {
         headers: {
@@ -38,7 +50,7 @@ exports.fetchContextAuthorizations = fetchContextAuthorizations;
 const logoutSession = async (config, session) => {
     if (!session?.refreshToken)
         return;
-    const url = new URL('/auth/logout', config.authBaseUrl);
+    const url = new URL('/auth/logout', requireBaseUrl(config));
     const fetchImpl = config.fetch ?? fetch;
     try {
         await fetchImpl(url.toString(), {

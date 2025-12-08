@@ -1,16 +1,26 @@
 import { Authorization, Session, Config, ContextAuthorization } from "./types";
-export declare class Client {
+import type { UserInfo } from "./types";
+export declare class AuthClient {
     private readonly config;
     private readonly storage;
     private readonly storageKey;
     private readonly timeoutMs;
     private readonly pollIntervalMs;
     private readonly authOrigin;
-    constructor(config: Config);
+    private readonly resolvedConfig;
+    constructor(config?: Config);
     getCachedSession(): Session | null;
     ensureSession(): Promise<Session>;
     loadAuthorizations(session?: Session): Promise<Authorization>;
     loadContextAuthorizations(session?: Session): Promise<ContextAuthorization>;
+    /**
+     * Returns user/token claims and (optionally) contextual info such as employeeId/branches.
+     * Set { fetchContext: true } to include contextual authorizations.
+     */
+    user(options?: {
+        fetchContext?: boolean;
+        session?: Session;
+    }): Promise<UserInfo>;
     /**
      * Clears the locally cached session only (no network calls).
      */
@@ -30,5 +40,6 @@ export declare class Client {
      */
     switchUser(): Promise<Session>;
     private launchAuthProbe;
+    private decodeAccessToken;
 }
 export declare const createAuthProbeResponse: (session: Session) => void;

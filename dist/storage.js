@@ -16,9 +16,18 @@ class MemoryStorage {
     }
 }
 exports.MemoryStorage = MemoryStorage;
-const getDefaultStorage = () => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-        return window.localStorage;
+const getDefaultStorage = (preferred) => {
+    if (typeof window !== 'undefined') {
+        if (preferred === 'sessionStorage' && window.sessionStorage)
+            return window.sessionStorage;
+        if (preferred === 'localStorage' && window.localStorage)
+            return window.localStorage;
+        if (!preferred || preferred === 'memory') {
+            if (window.localStorage)
+                return window.localStorage;
+            if (window.sessionStorage)
+                return window.sessionStorage;
+        }
     }
     return new MemoryStorage();
 };
