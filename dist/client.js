@@ -19,7 +19,7 @@ class AuthClient {
         if (!appKey) {
             throw new Error(`appKey is required; set SMIS_APP_KEY or pass AuthClient({appKey: ...})`);
         }
-        const authBaseUrl = config.authBaseUrl ?? envAuthBaseUrl ?? 'https://auth.smis.itc.edu.kh';
+        const authBaseUrl = config.authBaseUrl ?? envAuthBaseUrl ?? process.env.SMIS_AUTH_BASE_URL ?? 'https://accounts.itc.edu.kh';
         const probePath = config.probePath ?? envProbePath ?? '/sso/probe';
         const storagePreference = config.storage ??
             (envStorage === 'sessionStorage'
