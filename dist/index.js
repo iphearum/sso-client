@@ -19,4 +19,7 @@ __exportStar(require("./http"), exports);
 __exportStar(require("./storage"), exports);
 __exportStar(require("./types"), exports);
 __exportStar(require("./jwt"), exports);
+__exportStar(require("./next-auth"), exports);
+__exportStar(require("./client-factory"), exports);
+__exportStar(require("./config"), exports);
 //# sourceMappingURL=index.js.map

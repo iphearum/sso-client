@@ -91,7 +91,104 @@ You can set defaults via environment variables (bundlers like Vite/Next can inli
 - `SMIS_TIMEOUT_MS` (or `NEXT_PUBLIC_SMIS_TIMEOUT_MS`) – popup timeout before failing login
 - `SMIS_POLL_INTERVAL_MS` (or `NEXT_PUBLIC_SMIS_POLL_INTERVAL_MS`) – interval for detecting if the popup was closed prematurely
 
+### Example session payload (ensureSession result)
+
+```json
+{
+  "accessToken": "ey##",
+  "refreshToken": "87511a80-###",
+  "expiresAt": "2025-12-10T12:28:40.372Z"
+}
+```
+
+### Using with NextAuth + useSession (App Router)
+
+You can hydrate NextAuth from an SMIS SSO session so `useSession()` reflects the SSO state. Swap your imports to `@smis/sso-client/next` (a thin re-export of `next-auth/react` plus the SMIS-aware hook) to keep NextAuth synchronized automatically without touching the rest of your app code.
+
+```tsx
+// app/page.tsx (client component)
+import { useSession } from "@smis/sso-client/next";
+
+export default function Page() {
+  const { status, data, update } = useSession({
+    config: { appKey: "pp-123456789" },
+    redirect: false,
+  });
+
+  return <pre>{JSON.stringify({ status, data }, null, 2)}</pre>;
+}
+```
+
+Under the hood the hook calls `ensureSession()` and hydrates NextAuth with `signIn("credentials", { token, session })` once the SMIS session is available, so `useSession()` exposes the decoded token info and raw SSO session everywhere. Adapters for Nuxt, Laravel, and mobile clients will follow the same pattern so each framework can reuse the shared SSO session logic.
+
+```ts
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { decodeJwtPayload } from "@smis/sso-client";
+
+export const authOptions = {
+  session: { strategy: "jwt" },
+  providers: [
+    Credentials({
+      name: "SMIS",
+      credentials: { token: {}, session: {} },
+      authorize: (creds) => {
+        if (!creds?.token) return null;
+        const info = decodeJwtPayload(creds.token);
+        const username = info.username ?? info.sub ?? "user";
+        return {
+          id: username,
+          name: username,
+          email: info.email,
+          info,
+          sso: creds.session ? JSON.parse(creds.session) : undefined,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    jwt: ({ token, user }) => ({ ...token, ...user }),
+    session: ({ session, token }) => ({ ...session, ...token }),
+  },
+};
+```
+
+```tsx
+// app/page.tsx (client component)
+const { status, data } = useSession();
+const syncSession = async () => {
+  const sso = await client.ensureSession();
+  await signIn("credentials", {
+    token: sso.accessToken,
+    session: JSON.stringify(sso),
+    redirect: false,
+  });
+};
+
+// To sign out: clear the remote session (best-effort) and drop NextAuth state
+await client.signOut();
+await signOut({ redirect: false });
+```
+
+After calling `syncSession`, `useSession()` exposes `data.sso` (raw session), `data.info` (decoded JWT), and standard `user` fields for downstream components.
+
 ## Error handling
 
 - `ensureSession` throws if it runs outside the browser (no `window`) or if the user closes the probe window before login.
 - `loadAuthorizations` throws if the auth portal responds with a non-OK status (for example, when the access token is invalid or expired).
+- `user` throws if the access token is missing/invalid.
+
+## Packaging helper (optional)
+
+Bundle `dist/` into a single JSON file, optionally encrypted for distribution:
+
+```bash
+# Plain bundle -> dist-bundle.json
+npm run bundle:dist
+
+# Encrypted bundle -> dist-bundle.enc.json (set SMIS_BUNDLE_SECRET)
+SMIS_BUNDLE_SECRET="passphrase" npm run bundle:dist -- --encrypt --out dist-bundle.enc.json
+```
+
+The bundle is framework-agnostic (Next, Nuxt, etc.) and can be unpacked by any platform that can decode base64/JSON; the encrypted form uses AES-256-GCM with scrypt key derivation.

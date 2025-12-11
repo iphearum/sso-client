@@ -14,7 +14,7 @@ export declare class AuthClient {
     loadAuthorizations(session?: Session): Promise<Authorization>;
     loadContextAuthorizations(session?: Session): Promise<ContextAuthorization>;
     /**
-     * Returns user/token claims and (optionally) contextual info such as employeeId/branches.
+     * Returns user/token info and (optionally) contextual details such as employeeId/branches.
      * Set { fetchContext: true } to include contextual authorizations.
      */
     user(options?: {

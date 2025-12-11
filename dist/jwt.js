@@ -35,8 +35,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodeJwtPayload = exports.createAppProbeToken = exports.createHs256Jwt = void 0;
+exports.decodeJwtPayload = exports.createAppProbeToken = exports.verifyHs256Jwt = exports.createHs256Jwt = void 0;
 const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 const base64Url = (data) => {
     const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
     // eslint-disable-next-line unicorn/prefer-code-point
@@ -45,6 +46,18 @@ const base64Url = (data) => {
         str += String.fromCharCode(bytes[i]);
     }
     return btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+};
+const base64UrlDecode = (input) => {
+    const padded = input.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = padded + '='.repeat((4 - (padded.length % 4)) % 4);
+    const binary = typeof atob === 'function'
+        ? atob(base64)
+        : Buffer.from(base64, 'base64').toString('binary');
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
 };
 const base64UrlEncodeJson = (obj) => {
     const json = JSON.stringify(obj);
@@ -72,6 +85,21 @@ const createHs256Jwt = async (secret, payload, options = {}) => {
     return `${unsigned}.${signature}`;
 };
 exports.createHs256Jwt = createHs256Jwt;
+const verifyHs256Jwt = async (token, secret) => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw new Error('Invalid JWT format');
+    }
+    const [headerB64, payloadB64, signature] = parts;
+    const unsigned = `${headerB64}.${payloadB64}`;
+    const expected = await signHmacSha256(secret, unsigned);
+    if (signature !== expected) {
+        throw new Error('Invalid JWT signature');
+    }
+    const payloadBytes = base64UrlDecode(payloadB64);
+    return JSON.parse(textDecoder.decode(payloadBytes));
+};
+exports.verifyHs256Jwt = verifyHs256Jwt;
 const createAppProbeToken = async (appKey, expiresInSeconds = 300) => {
     const now = Math.floor(Date.now() / 1000);
     return (0, exports.createHs256Jwt)(appKey, {

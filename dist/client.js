@@ -3,36 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAuthProbeResponse = exports.AuthClient = void 0;
 const http_1 = require("./http");
 const storage_1 = require("./storage");
-const env_1 = require("./env");
 const jwt_1 = require("./jwt");
+const config_1 = require("./config");
 class AuthClient {
     constructor(config = {}) {
         this.config = config;
-        const envStorage = (0, env_1.readEnvString)('SMIS_STORAGE', 'NEXT_PUBLIC_SMIS_STORAGE');
-        const envStorageKey = (0, env_1.readEnvString)('SMIS_STORAGE_KEY', 'NEXT_PUBLIC_SMIS_STORAGE_KEY');
-        const envTimeout = (0, env_1.readEnvNumber)('SMIS_TIMEOUT_MS', 'NEXT_PUBLIC_SMIS_TIMEOUT_MS');
-        const envPollInterval = (0, env_1.readEnvNumber)('SMIS_POLL_INTERVAL_MS', 'NEXT_PUBLIC_SMIS_POLL_INTERVAL_MS');
-        const envAppKey = (0, env_1.readEnvString)('SMIS_APP_KEY', 'NEXT_PUBLIC_SMIS_APP_KEY');
-        const envAuthBaseUrl = (0, env_1.readEnvString)('SMIS_AUTH_BASE_URL', 'NEXT_PUBLIC_SMIS_AUTH_BASE_URL');
-        const envProbePath = (0, env_1.readEnvString)('SMIS_PROBE_PATH', 'NEXT_PUBLIC_SMIS_PROBE_PATH');
-        const appKey = config.appKey ?? envAppKey;
-        if (!appKey) {
-            throw new Error(`appKey is required; set SMIS_APP_KEY or pass AuthClient({appKey: ...})`);
-        }
-        const authBaseUrl = config.authBaseUrl ?? envAuthBaseUrl ?? process.env.SMIS_AUTH_BASE_URL ?? 'https://accounts.itc.edu.kh';
-        const probePath = config.probePath ?? envProbePath ?? '/sso/probe';
-        const storagePreference = config.storage ??
-            (envStorage === 'sessionStorage'
-                ? 'sessionStorage'
-                : envStorage === 'memory'
-                    ? 'memory'
-                    : 'localStorage');
-        this.storage = (0, storage_1.getDefaultStorage)(storagePreference);
-        this.storageKey = config.storageKey ?? envStorageKey ?? `smis-sso:${appKey}`;
-        this.timeoutMs = config.timeoutMs ?? envTimeout ?? 60 * 60 * 1000;
-        this.pollIntervalMs = config.pollIntervalMs ?? envPollInterval ?? 60 * 1000;
-        this.resolvedConfig = { ...config, appKey, authBaseUrl, probePath };
-        this.authOrigin = new URL(authBaseUrl).origin;
+        this.resolvedConfig = (0, config_1.resolveConfig)(config);
+        this.storage = (0, storage_1.getDefaultStorage)(this.resolvedConfig.storage);
+        this.storageKey = this.resolvedConfig.storageKey;
+        this.timeoutMs = this.resolvedConfig.timeoutMs;
+        this.pollIntervalMs = this.resolvedConfig.pollIntervalMs;
+        this.authOrigin = new URL(this.resolvedConfig.authBaseUrl).origin;
     }
     getCachedSession() {
         const session = (0, storage_1.readSession)(this.storage, this.storageKey);
@@ -64,17 +45,17 @@ class AuthClient {
         return (0, http_1.fetchContextAuthorizations)(this.resolvedConfig, resolvedSession);
     }
     /**
-     * Returns user/token claims and (optionally) contextual info such as employeeId/branches.
+     * Returns user/token info and (optionally) contextual details such as employeeId/branches.
      * Set { fetchContext: true } to include contextual authorizations.
      */
     async user(options) {
         const fetchContext = options?.fetchContext ?? false;
         const session = options?.session ?? (await this.ensureSession());
-        const claims = this.decodeAccessToken(session.accessToken);
+        const info = this.decodeAccessToken(session.accessToken);
         if (!fetchContext)
-            return claims;
+            return info;
         const context = await this.loadContextAuthorizations(session);
-        return { ...claims, employeeId: context.employeeId, branches: context.branches };
+        return { ...info, employeeId: context.employeeId, branches: context.branches };
     }
     /**
      * Clears the locally cached session only (no network calls).

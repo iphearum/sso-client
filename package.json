@@ -5,6 +5,28 @@
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./nuxt": {
+      "import": "./dist/nuxt.js",
+      "require": "./dist/nuxt.js",
+      "types": "./dist/nuxt.d.ts"
+    },
+    "./next": {
+      "import": "./dist/next.js",
+      "require": "./dist/next.js",
+      "types": "./dist/next.d.ts"
+    },
+    "./next-auth": {
+      "import": "./dist/next-auth.js",
+      "require": "./dist/next-auth.js",
+      "types": "./dist/next-auth.d.ts"
+    }
+  },
   "keywords": ["sso", "authentication", "smis", "client"],
   "author": "Your Team Name",
   "repository": {
@@ -15,15 +37,25 @@
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "dev": "bun run examples/basic.ts",
-    "test": "npm run build && node test/probe.test.js && node test/user.test.js"
+    "test": "npm run build && node test/probe.test.js && node test/user.test.js",
+    "bundle:dist": "node scripts/pack-dist.mjs"
   },
   "files": [
     "dist",
     "README.md"
   ],
-  "dependencies": {},
+  "peerDependencies": {
+    "next-auth": "^4.0.0 || ^5.0.0",
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "next-auth": "^4.24.7",
+    "react": "^18.2.0",
     "typescript": "^5.4.0"
   }
 }
