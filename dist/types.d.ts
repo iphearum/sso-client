@@ -1,6 +1,8 @@
 export interface Config {
     /** Application key issued by SMIS (e.g., pp-#########, tk-gic-#########). Optional if provided via env. */
     appKey?: string;
+    /** Optional environment map (useful in client bundles where process.env is not available). */
+    env?: Record<string, string | undefined>;
     /** Base URL of the auth portal (e.g., https://auth.smis.itc.edu.kh). */
     authBaseUrl?: string;
     /** Relative path on the auth portal used to probe or start sessions. */
