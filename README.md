@@ -91,6 +91,26 @@ You can set defaults via environment variables (bundlers like Vite/Next can inli
 - `SMIS_TIMEOUT_MS` (or `NEXT_PUBLIC_SMIS_TIMEOUT_MS`) – popup timeout before failing login
 - `SMIS_POLL_INTERVAL_MS` (or `NEXT_PUBLIC_SMIS_POLL_INTERVAL_MS`) – interval for detecting if the popup was closed prematurely
 
+### If your app cannot read `.env*` in the client bundle
+
+Some bundlers do not inline environment variables inside dependencies. In that case, pass the env map explicitly or set it at runtime:
+
+```ts
+import { setRuntimeEnv } from "@smis/sso-client";
+
+// Vite / Astro
+setRuntimeEnv(import.meta.env);
+```
+
+```ts
+import { AuthClient } from "@smis/sso-client";
+
+const client = new AuthClient({
+  env: import.meta.env, // or process.env in a Node-only runtime
+  appKey: "pp-123456789"
+});
+```
+
 ### Example session payload (ensureSession result)
 
 ```json
@@ -101,9 +121,22 @@ You can set defaults via environment variables (bundlers like Vite/Next can inli
 }
 ```
 
-### Using with NextAuth + useSession (App Router)
+### Using with NextAuth + useSession
 
 You can hydrate NextAuth from an SMIS SSO session so `useSession()` reflects the SSO state. Swap your imports to `@smis/sso-client/next` (a thin re-export of `next-auth/react` plus the SMIS-aware hook) to keep NextAuth synchronized automatically without touching the rest of your app code.
+
+```tsx
+// pages/_app.tsx
+import { SessionProvider } from "@smis/sso-client/next";
+
+export default function App({ Component, pageProps: { session, ...pageProps } }) {
+  return (
+    <SessionProvider session={session}>
+      <Component {...pageProps} />
+    </SessionProvider>
+  );
+}
+```
 
 ```tsx
 // app/page.tsx (client component)
