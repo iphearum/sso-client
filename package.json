@@ -1,6 +1,6 @@
 {
   "name": "@itc-smis/sso-client",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Client-side helper for integrating SMIS SSO sessions, roles, and permissions",
   "license": "MIT",
   "main": "dist/index.js",
@@ -49,15 +49,6 @@
     "type": "git",
     "url": "https://github.com/iphearum/sso-client.git"
   },
-  "scripts": {
-    "build": "tsc -p tsconfig.json && npm run build:esm",
-    "build:esm": "esbuild src/index.ts src/browser.ts src/next.ts src/next-auth.ts src/nuxt.ts --bundle --format=esm --platform=neutral --target=es2020 --outdir=dist/esm --out-extension:.js=.mjs --external:next-auth --external:react --external:nuxt",
-    "build:browser": "esbuild src/browser.ts --bundle --format=esm --platform=browser --target=es2020 --outfile=dist-browser/sso-client.js",
-    "prepublishOnly": "npm run build && npm run build:browser",
-    "dev": "bun run examples/basic.ts",
-    "test": "npm run build && node test/probe.test.js && node test/user.test.js",
-    "bundle:dist": "node scripts/pack-dist.mjs"
-  },
   "files": [
     "dist",
     "dist-browser",
@@ -74,13 +65,5 @@
     "react": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "esbuild": "^0.21.5",
-    "next-auth": "^4.24.7",
-    "react": "^18.2.0",
-    "typescript": "^5.4.0"
   }
 }

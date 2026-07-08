@@ -1,11 +1,11 @@
-# @smis/sso-client
+# @itc-smis/sso-client
 
 A lightweight helper for SMIS SSO enabled applications. The library handles discovering an existing SMIS session via the shared auth portal, requesting a new session when needed, and fetching roles/permissions for the configured application key.
 
 ## Installation
 
 ```bash
-npm install @smis/sso-client
+npm install @itc-smis/sso-client
 ```
 
 ## Configuration
@@ -13,7 +13,7 @@ npm install @smis/sso-client
 Each SMIS-issued application key identifies the target application and its authorization scope (examples: `pp-#########`, `pp-gic-#########`, `tk-####`, `tk-gic-#########`). Provide that key alongside the SMIS auth domain when creating the client (defaults to `https://auth.smis.itc.edu.kh` if not set via env/config):
 
 ```ts
-import { AuthClient } from '@smis/sso-client';
+import { AuthClient } from '@itc-smis/sso-client';
 
 // Preferred: supply authBaseUrl directly (fallback default: https://auth.smis.itc.edu.kh)
 const client = new AuthClient({
@@ -106,7 +106,7 @@ const session = await client.refreshSession(); // null if not refreshable
 The auth portal should post the active session back to the opener after login or session discovery. The probe URL now looks like `https://auth.smis.itc.edu.kh/sso/probe?token=<jwt>` where the JWT is HS256-signed with the appKey and includes `appKey`, `iat`, `exp`. The helper below can be used by the `auth.smis.itc.edu.kh` UI to respond once the session is established:
 
 ```ts
-import { createAuthProbeResponse } from '@smis/sso-client';
+import { createAuthProbeResponse } from '@itc-smis/sso-client';
 
 // after the user signs in and a session is available
 authApi.getSession().then((session) => {
@@ -148,14 +148,14 @@ You can set defaults via environment variables (bundlers like Vite/Next can inli
 Some bundlers do not inline environment variables inside dependencies. In that case, pass the env map explicitly or set it at runtime:
 
 ```ts
-import { setRuntimeEnv } from "@smis/sso-client";
+import { setRuntimeEnv } from "@itc-smis/sso-client";
 
 // Vite / Astro
 setRuntimeEnv(import.meta.env);
 ```
 
 ```ts
-import { AuthClient } from "@smis/sso-client";
+import { AuthClient } from "@itc-smis/sso-client";
 
 const client = new AuthClient({
   env: import.meta.env, // or process.env in a Node-only runtime
@@ -175,11 +175,11 @@ const client = new AuthClient({
 
 ### Using with NextAuth + useSession
 
-You can hydrate NextAuth from an SMIS SSO session so `useSession()` reflects the SSO state. Swap your imports to `@smis/sso-client/next` (a thin re-export of `next-auth/react` plus the SMIS-aware hook) to keep NextAuth synchronized automatically without touching the rest of your app code.
+You can hydrate NextAuth from an SMIS SSO session so `useSession()` reflects the SSO state. Swap your imports to `@itc-smis/sso-client/next` (a thin re-export of `next-auth/react` plus the SMIS-aware hook) to keep NextAuth synchronized automatically without touching the rest of your app code.
 
 ```tsx
 // pages/_app.tsx
-import { SessionProvider } from "@smis/sso-client/next";
+import { SessionProvider } from "@itc-smis/sso-client/next";
 
 export default function App({ Component, pageProps: { session, ...pageProps } }) {
   return (
@@ -192,7 +192,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
 
 ```tsx
 // app/page.tsx (client component)
-import { useSession } from "@smis/sso-client/next";
+import { useSession } from "@itc-smis/sso-client/next";
 
 export default function Page() {
   const { status, data, update } = useSession({
@@ -210,7 +210,7 @@ Under the hood the hook calls `ensureSession()` and hydrates NextAuth with `sign
 // app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { decodeJwtPayload } from "@smis/sso-client";
+import { decodeJwtPayload } from "@itc-smis/sso-client";
 
 export const authOptions = {
   session: { strategy: "jwt" },

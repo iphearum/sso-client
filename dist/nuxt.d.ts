@@ -12,7 +12,7 @@ export interface UseNuxtSessionOptions {
 /**
  * Nuxt composable mirroring the Next.js drop-in API.
  * Usage: `const { data, status, ensureSession, signOut } = useSession()`
- * Import from `@smis/sso-client/nuxt`.
+ * Import from `@itc-smis/sso-client/nuxt`.
  */
 export declare function useSession(options?: UseNuxtSessionOptions): {
     data: {

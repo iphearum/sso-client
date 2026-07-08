@@ -4,7 +4,7 @@ exports.useNextAuthSession = exports.signOut = exports.signIn = exports.SessionP
 /**
  * Next.js/App Router-friendly surface that mirrors `next-auth/react` while
  * keeping SMIS SSO in sync. This allows apps to swap imports to
- * `@smis/sso-client/next` with minimal code changes.
+ * `@itc-smis/sso-client/next` with minimal code changes.
  */
 const runtime_bootstrap_1 = require("./runtime-bootstrap");
 (0, runtime_bootstrap_1.bootstrapRuntimeEnv)();

@@ -7,7 +7,7 @@ const client_factory_1 = require("./client-factory");
 /**
  * Nuxt composable mirroring the Next.js drop-in API.
  * Usage: `const { data, status, ensureSession, signOut } = useSession()`
- * Import from `@smis/sso-client/nuxt`.
+ * Import from `@itc-smis/sso-client/nuxt`.
  */
 function useSession(options) {
     const { client: providedClient, config, auto = true } = options ?? {};
