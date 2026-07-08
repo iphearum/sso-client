@@ -3,17 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolveConfig = void 0;
 const env_1 = require("./env");
 const inferAppKey = (config) => {
+    const runtimeEnv = (0, env_1.getRuntimeEnv)();
     const globalAppKey = typeof globalThis !== "undefined"
         ? globalThis.__SMIS_APP_KEY__ ??
             globalThis.SMIS_APP_KEY ??
             globalThis.APP_KEY
         : undefined;
     return (config?.appKey ??
-        (0, env_1.readEnvStringFrom)(config?.env, "SMIS_APP_KEY", "NEXT_PUBLIC_SMIS_APP_KEY", "NEXTAUTH_SMIS_APP_KEY") ??
+        (0, env_1.readEnvStringFrom)(config?.env, "SMIS_APP_KEY", "NEXT_PUBLIC_SMIS_APP_KEY", "NEXTAUTH_SMIS_APP_KEY", "APP_KEY", "NEXT_PUBLIC_APP_KEY") ??
+        runtimeEnv?.NEXT_PUBLIC_SMIS_APP_KEY ??
         globalAppKey);
 };
 const inferAuthBaseUrl = (config) => config?.authBaseUrl ??
-    (0, env_1.readEnvStringFrom)(config?.env, "SMIS_AUTH_BASE_URL", "NEXT_PUBLIC_SMIS_AUTH_BASE_URL");
+    (0, env_1.readEnvStringFrom)(config?.env, "SMIS_AUTH_BASE_URL", "NEXT_PUBLIC_SMIS_AUTH_BASE_URL", "AUTH_BASE_URL", "NEXT_PUBLIC_AUTH_BASE_URL", "BASE_URL", "NEXT_PUBLIC_BASE_URL") ??
+    (0, env_1.getRuntimeEnv)()?.NEXT_PUBLIC_SMIS_AUTH_BASE_URL;
 const inferProbePath = (config) => config?.probePath ??
     (0, env_1.readEnvStringFrom)(config?.env, "SMIS_PROBE_PATH", "NEXT_PUBLIC_SMIS_PROBE_PATH");
 const inferStorage = (config) => {

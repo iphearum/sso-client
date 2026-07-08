@@ -1,39 +1,6 @@
 "use strict";
 // Minimal HS256 JWT signing without external deps; works in browser (Web Crypto)
 // and Node (crypto HMAC). Only supports JSON payloads and UTF-8 secrets.
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.decodeJwtPayload = exports.createAppProbeToken = exports.verifyHs256Jwt = exports.createHs256Jwt = void 0;
 const textEncoder = new TextEncoder();
@@ -63,6 +30,17 @@ const base64UrlEncodeJson = (obj) => {
     const json = JSON.stringify(obj);
     return base64Url(textEncoder.encode(json));
 };
+const getNodeCrypto = () => {
+    const req = typeof require === 'function' ? require : undefined;
+    if (!req)
+        return null;
+    try {
+        return req('crypto');
+    }
+    catch {
+        return null;
+    }
+};
 const signHmacSha256 = async (secret, data) => {
     // Browser path
     if (typeof window !== 'undefined' && window.crypto?.subtle) {
@@ -70,9 +48,12 @@ const signHmacSha256 = async (secret, data) => {
         const signature = await window.crypto.subtle.sign('HMAC', key, textEncoder.encode(data));
         return base64Url(signature);
     }
-    // Node path
-    const { createHmac } = await Promise.resolve().then(() => __importStar(require('crypto')));
-    const hmac = createHmac('sha256', secret);
+    // Node path (dynamic require to avoid bundling in browser builds)
+    const cryptoMod = getNodeCrypto();
+    if (!cryptoMod?.createHmac) {
+        throw new Error('crypto.createHmac is not available');
+    }
+    const hmac = cryptoMod.createHmac('sha256', secret);
     hmac.update(data);
     return hmac.digest('base64url');
 };

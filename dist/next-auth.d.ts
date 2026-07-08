@@ -21,6 +21,7 @@ export interface SmisSignInOptions extends EnsureNextAuthSessionOptions {
     client?: NextAuthClient;
     config?: Config;
     force?: boolean;
+    prompt?: 'select_account';
 }
 export interface SmisSignOutOptions extends Record<string, unknown> {
     client?: NextAuthClient;
@@ -41,4 +42,4 @@ export declare function signOut(options?: SmisSignOutOptions): Promise<void>;
 /**
  * Drop-in replacement for NextAuth's `useSession` that stays in sync with SMIS SSO.
  */
-export declare function useSession(options?: UseSmisSessionOptions): import("next-auth/react").UseSessionResponse<any>;
+export declare function useSession(options?: UseSmisSessionOptions): UseSessionLike;

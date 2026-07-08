@@ -21,11 +21,15 @@ export interface Config {
 export interface Session {
     accessToken: string;
     refreshToken?: string;
+    serviceSessionId?: string;
+    appKey?: string;
     expiresAt: string;
 }
 export interface UserInfo {
     userId: string;
     username: string;
+    email?: string;
+    name?: string;
     roles: string[];
     permissions: string[];
     employeeId?: number | null;
@@ -47,4 +51,45 @@ export interface StorageAdapter {
 export interface AuthProbeMessage {
     type: 'smis:sso:session';
     payload: Session;
+}
+/** Result of linking an external (e.g. Google) account to the signed-in user. */
+export interface LinkResult {
+    linked: boolean;
+    provider: string;
+    alreadyLinked?: boolean;
+    externalId?: string;
+    email?: string;
+    error?: string;
+}
+export interface AuthLinkMessage {
+    type: 'smis:sso:link';
+    payload: LinkResult;
+}
+/** A sign-in option configured for the app on the SSO gateway. */
+export interface SignInProvider {
+    key: string;
+    name: string;
+    /** Absolute URL that starts this provider's sign-in flow. */
+    startUrl: string;
+    /** Absolute logo URL (or null when the provider has none). */
+    iconUrl: string | null;
+    /** True when this provider replaces the password form for the app. */
+    primary: boolean;
+}
+export interface ServiceSessionInfo {
+    serviceSessionId: string;
+    appKey: string;
+    appName: string;
+    deviceId?: string | null;
+    deviceLabel?: string | null;
+    ipAddress?: string | null;
+    createdAt: string;
+    lastSeenAt: string;
+    expiresAt: string;
+    current: boolean;
+}
+export interface ServiceSessionGroup {
+    appKey: string;
+    appName: string;
+    sessions: ServiceSessionInfo[];
 }

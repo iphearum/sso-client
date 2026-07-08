@@ -37,8 +37,8 @@ exports.NextAuthClient = NextAuthClient;
 const getClient = (client, config) => (0, client_factory_1.getCachedClient)("next-auth", client, config, (cfg) => new NextAuthClient((0, config_1.resolveConfig)(cfg)));
 // --- Public surface --------------------------------------------------------
 async function signIn(options) {
-    const { client, config, force, ...hydrateOptions } = options ?? {};
-    const resolvedSession = hydrateOptions.session ?? (await getClient(client, config).signIn({ force }));
+    const { client, config, force, prompt, ...hydrateOptions } = options ?? {};
+    const resolvedSession = hydrateOptions.session ?? (await getClient(client, config).signIn({ force, prompt }));
     const providerId = hydrateOptions.providerId ?? "credentials";
     const redirect = hydrateOptions.redirect ?? false;
     await (0, react_2.signIn)(providerId, {
@@ -58,8 +58,37 @@ async function signOut(options) {
  * Drop-in replacement for NextAuth's `useSession` that stays in sync with SMIS SSO.
  */
 function useSession(options) {
-    const sessionHook = (0, react_2.useSession)();
     const { client: providedClient, config, ...ensureOptions } = options ?? {};
+    const [fallbackSession, setFallbackSession] = (0, react_1.useState)({
+        status: "unauthenticated",
+        data: null,
+    });
+    const [missingProvider, setMissingProvider] = (0, react_1.useState)(false);
+    let nextAuthSessionHook = null;
+    let providerMissingDetected = false;
+    try {
+        nextAuthSessionHook = (0, react_2.useSession)();
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (message.includes("SessionProvider")) {
+            providerMissingDetected = true;
+        }
+        else {
+            throw error;
+        }
+    }
+    (0, react_1.useEffect)(() => {
+        if (providerMissingDetected && !missingProvider) {
+            console.warn("SMIS SSO: NextAuth SessionProvider is missing; falling back to local session state.");
+            setMissingProvider(true);
+            return;
+        }
+        if (!providerMissingDetected && missingProvider) {
+            setMissingProvider(false);
+        }
+    }, [missingProvider, providerMissingDetected]);
+    const sessionHook = providerMissingDetected || missingProvider || !nextAuthSessionHook ? fallbackSession : nextAuthSessionHook;
     // Memoize inputs to avoid effect loops when callers pass inline objects.
     const configKey = (0, react_1.useMemo)(() => JSON.stringify(config ?? {}), [config]);
     const ensureKey = (0, react_1.useMemo)(() => JSON.stringify(ensureOptions ?? {}), [ensureOptions]);
@@ -79,8 +108,27 @@ function useSession(options) {
             return;
         if (sessionHook.status === "loading")
             return;
-        void client.ensureNextAuthSession({ sessionHook, signIn: react_2.signIn }, memoizedEnsureOptions);
-    }, [client, sessionHook.status, memoizedEnsureOptions]);
+        void client
+            .ensureNextAuthSession({ sessionHook, signIn: react_2.signIn }, memoizedEnsureOptions)
+            .then((resolvedSession) => {
+            if (missingProvider) {
+                setFallbackSession({
+                    status: "authenticated",
+                    data: {
+                        sso: resolvedSession,
+                    },
+                });
+            }
+        })
+            .catch(() => {
+            if (missingProvider) {
+                setFallbackSession({
+                    status: "unauthenticated",
+                    data: null,
+                });
+            }
+        });
+    }, [client, sessionHook.status, memoizedEnsureOptions, missingProvider]);
     return sessionHook;
 }
 //# sourceMappingURL=next-auth.js.map

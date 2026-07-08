@@ -1,58 +1,86 @@
 {
-  "name": "@smis/sso-client",
-  "version": "0.1.0",
+  "name": "@itc-smis/sso-client",
+  "version": "1.1.0",
   "description": "Client-side helper for integrating SMIS SSO sessions, roles, and permissions",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/esm/index.mjs",
+    "./dist/next.js",
+    "./dist/esm/next.mjs"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/esm/browser.mjs",
+      "require": "./dist/browser.js"
     },
     "./nuxt": {
-      "import": "./dist/nuxt.js",
-      "require": "./dist/nuxt.js",
-      "types": "./dist/nuxt.d.ts"
+      "types": "./dist/nuxt.d.ts",
+      "import": "./dist/esm/nuxt.mjs",
+      "require": "./dist/nuxt.js"
     },
     "./next": {
-      "import": "./dist/next.js",
-      "require": "./dist/next.js",
-      "types": "./dist/next.d.ts"
+      "types": "./dist/next.d.ts",
+      "import": "./dist/esm/next.mjs",
+      "require": "./dist/next.js"
     },
     "./next-auth": {
-      "import": "./dist/next-auth.js",
-      "require": "./dist/next-auth.js",
-      "types": "./dist/next-auth.d.ts"
+      "types": "./dist/next-auth.d.ts",
+      "import": "./dist/esm/next-auth.mjs",
+      "require": "./dist/next-auth.js"
     }
   },
-  "keywords": ["sso", "authentication", "smis", "client"],
+  "keywords": [
+    "sso",
+    "authentication",
+    "smis",
+    "client"
+  ],
   "author": "Your Team Name",
   "repository": {
     "type": "git",
     "url": "https://github.com/iphearum/sso-client.git"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "npm run build",
+    "build": "tsc -p tsconfig.json && npm run build:esm",
+    "build:esm": "esbuild src/index.ts src/browser.ts src/next.ts src/next-auth.ts src/nuxt.ts --bundle --format=esm --platform=neutral --target=es2020 --outdir=dist/esm --out-extension:.js=.mjs --external:next-auth --external:react --external:nuxt",
+    "build:browser": "esbuild src/browser.ts --bundle --format=esm --platform=browser --target=es2020 --outfile=dist-browser/sso-client.js",
+    "prepublishOnly": "npm run build && npm run build:browser",
     "dev": "bun run examples/basic.ts",
     "test": "npm run build && node test/probe.test.js && node test/user.test.js",
     "bundle:dist": "node scripts/pack-dist.mjs"
   },
   "files": [
     "dist",
+    "dist-browser",
     "README.md"
   ],
   "peerDependencies": {
     "next-auth": "^4.0.0 || ^5.0.0",
     "react": "^18.0.0"
   },
+  "peerDependenciesMeta": {
+    "next-auth": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@types/node": "^20.19.27",
-    "@types/react": "^18.3.27",
-    "next-auth": "^4.24.13",
-    "react": "^18.3.1",
-    "typescript": "^5.9.3"
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "esbuild": "^0.21.5",
+    "next-auth": "^4.24.7",
+    "react": "^18.2.0",
+    "typescript": "^5.4.0"
   }
 }

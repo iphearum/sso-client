@@ -14,15 +14,11 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const runtime_bootstrap_1 = require("./runtime-bootstrap");
-(0, runtime_bootstrap_1.bootstrapRuntimeEnv)();
 __exportStar(require("./client"), exports);
 __exportStar(require("./http"), exports);
 __exportStar(require("./storage"), exports);
 __exportStar(require("./types"), exports);
 __exportStar(require("./jwt"), exports);
-__exportStar(require("./next-auth"), exports);
 __exportStar(require("./client-factory"), exports);
 __exportStar(require("./config"), exports);
-__exportStar(require("./env"), exports);
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=browser.js.map

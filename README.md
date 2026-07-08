@@ -49,6 +49,58 @@ await client.switchUser();            // shortcut: clear and force new login
 await client.signOut();               // logout (best-effort) and clear local cache
 ```
 
+### Social sign-in (Google and other linked providers)
+
+When the application has linked OIDC providers on the gateway (`linked_provider_keys`, e.g. `["google"]`), the probe login page already shows a "Continue with Google" button. To skip the password form entirely and send the popup straight to the identity provider, use `signInWithProvider`:
+
+```ts
+// Opens /auth/oidc/google/start?appKey=... in the popup; resolves with the
+// SMIS session once the gateway finishes the Google callback. The Google
+// account is matched/linked to the core SMIS account by the gateway
+// (identity links), so roles/permissions are identical to password login.
+const session = await client.signInWithProvider('google');
+
+// Force a fresh Google sign-in even when a session is cached
+await client.signInWithProvider('google', { force: true });
+```
+
+The provider key must be one of the app's linked providers on the gateway, otherwise the popup shows "Application is not assigned to this provider". See `examples/google-login.html` for a runnable browser demo.
+
+### Dynamic provider buttons
+
+Instead of hard-coding "Sign in with Google", ask the gateway which sign-in options the app has (`GET /api/sso/providers`) and render them:
+
+```ts
+const providers = await client.listSignInProviders();
+// [{ key: 'google', name: 'Google', startUrl: 'https://…/auth/oidc/google/start?appKey=…',
+//    iconUrl: 'https://…/static/icons/google.ico', primary: false }]
+```
+
+Adding/removing a provider in the SSO console then updates every app's UI with no code change.
+
+### Redirect-mode sign-in (webviews, popup blockers)
+
+Popups don't work in in-app webviews (Facebook/Instagram/Line), under strict popup blockers, or on COOP-isolated pages. Use the full-page redirect flow there:
+
+```ts
+// Leaves the page for the auth portal; comes back to redirectUri (default: current URL)
+client.signInWithRedirect();                          // password/social chooser
+client.signInWithRedirect({ providerKey: 'google' }); // straight to Google
+
+// On page load (e.g. app bootstrap), pick up the returned session:
+const session = client.handleRedirectCallback(); // null when the URL has no tokens
+```
+
+`handleRedirectCallback` stores the session and scrubs the token parameters from the address bar. Note that tokens transit briefly via the URL in this mode — prefer the popup flow when available.
+
+### Silent session refresh
+
+`ensureSession()` now tries a silent refresh (`POST /auth/refresh` with the cached refresh token) before opening the interactive popup, so users are only prompted when the refresh token is missing, expired, or revoked. You can also refresh explicitly:
+
+```ts
+const session = await client.refreshSession(); // null if not refreshable
+```
+
 ### Handling the probe in the auth portal
 
 The auth portal should post the active session back to the opener after login or session discovery. The probe URL now looks like `https://auth.smis.itc.edu.kh/sso/probe?token=<jwt>` where the JWT is HS256-signed with the appKey and includes `appKey`, `iat`, `exp`. The helper below can be used by the `auth.smis.itc.edu.kh` UI to respond once the session is established:
@@ -83,9 +135,9 @@ const client = new AuthClient({
 
 You can set defaults via environment variables (bundlers like Vite/Next can inline them at build time). Copy `.env.example` to `.env` and adjust:
 
-- `SMIS_AUTH_BASE_URL` (or `NEXT_PUBLIC_SMIS_AUTH_BASE_URL`/`NEXT_PUBLIC_AUTH_BASE_URL`) – base URL of the auth portal (defaults to `https://auth.smis.itc.edu.kh` when unset)
+- `SMIS_AUTH_BASE_URL` (or `NEXT_PUBLIC_SMIS_AUTH_BASE_URL`/`NEXT_PUBLIC_AUTH_BASE_URL`/`BASE_URL`) – base URL of the auth portal (defaults to `https://auth.smis.itc.edu.kh` when unset)
 - `SMIS_PROBE_PATH` (or `NEXT_PUBLIC_SMIS_PROBE_PATH`) – path used for the popup probe (defaults to `/sso/probe`)
-- `SMIS_APP_KEY` (or `NEXT_PUBLIC_SMIS_APP_KEY`/`NEXT_PUBLIC_APP_KEY`) – optional default application key (passing `appKey` in config is preferred)
+- `SMIS_APP_KEY` (or `NEXT_PUBLIC_SMIS_APP_KEY`/`NEXT_PUBLIC_APP_KEY`/`APP_KEY`) – optional default application key (passing `appKey` in config is preferred)
 - `SMIS_STORAGE` (or `NEXT_PUBLIC_SMIS_STORAGE`) (`localStorage`, `sessionStorage`, or `memory`) – default storage driver
 - `SMIS_STORAGE_KEY` (or `NEXT_PUBLIC_SMIS_STORAGE_KEY`) – default key used to store the session
 - `SMIS_TIMEOUT_MS` (or `NEXT_PUBLIC_SMIS_TIMEOUT_MS`) – popup timeout before failing login
